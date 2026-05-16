@@ -10,6 +10,7 @@ namespace URLShortener.Infrastructure.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<ShortUrl> ShortUrls { get; set; }
+        public DbSet<AboutPageContent> AboutPages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

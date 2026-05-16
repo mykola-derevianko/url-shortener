@@ -1,0 +1,21 @@
+@model URLShortener.Web.Models.AboutEditViewModel
+
+@{
+	ViewData["Title"] = "Edit About";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form asp-action="AboutEdit" method="post">
+	<div class="mb-3">
+		<label asp-for="Content" class="form-label"></label>
+		<textarea asp-for="Content" class="form-control" rows="10"></textarea>
+		<span asp-validation-for="Content" class="text-danger"></span>
+	</div>
+	<button type="submit" class="btn btn-primary">Save</button>
+	<a class="btn btn-secondary" asp-action="About">Cancel</a>
+</form>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}

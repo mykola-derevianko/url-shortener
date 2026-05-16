@@ -1,0 +1,22 @@
+@{
+	ViewData["Title"] = "About";
+	var content = ViewData["Content"] as string ?? string.Empty;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (string.IsNullOrWhiteSpace(content))
+{
+	<p>About content is not available yet.</p>
+}
+else
+{
+	<div class="about-content">
+		@Html.Raw(content)
+	</div>
+}
+
+@if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+{
+	<a class="btn btn-primary mt-3" asp-action="AboutEdit">Edit About Content</a>
+}
