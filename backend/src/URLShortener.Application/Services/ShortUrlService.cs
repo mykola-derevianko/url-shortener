@@ -1,3 +1,4 @@
+using EntityFramework.Exceptions.Common;
 using URLShortener.Application.DTOs;
 using URLShortener.Application.DTOs.ShortUrl;
 using URLShortener.Application.Interfaces;
@@ -7,6 +8,7 @@ namespace test.Application.Services
 {
     public class ShortUrlService : IShortUrlService
     {
+        private const int MaxShortCodeAttempts = 5;
         private readonly IShortUrlRepository _repository;
 
         public ShortUrlService(IShortUrlRepository repository)
@@ -36,16 +38,36 @@ namespace test.Application.Services
             var shortUrl = new ShortUrl
             {
                 OriginalUrl = request.OriginalUrl,
-                ShortCode = GenerateShortCode(),
+                ShortCode = string.Empty,
                 CreatedByUserId = userId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
             await _repository.AddAsync(shortUrl);
-            await _repository.SaveChangesAsync();
 
-            return Result<ShortUrlResponse>.Success(MapToResponse(shortUrl));
+            for (var attempt = 1; attempt <= MaxShortCodeAttempts; attempt++)
+            {
+                shortUrl.ShortCode = GenerateShortCode();
+                try
+                {
+                    await _repository.SaveChangesAsync();
+                    return Result<ShortUrlResponse>.Success(MapToResponse(shortUrl));
+                }
+                catch (UniqueConstraintException)
+                {
+                    if (attempt == MaxShortCodeAttempts)
+                    {
+                        return Result<ShortUrlResponse>.Failure(
+                            "Conflict",
+                            "Failed to generate a unique short code. Please try again.");
+                    }
+                }
+            }
+
+            return Result<ShortUrlResponse>.Failure(
+                "Conflict",
+                "Failed to generate a unique short code. Please try again.");
         }
 
         public async Task<Result> DeleteAsync(int id, int requestUserId, bool isAdmin)

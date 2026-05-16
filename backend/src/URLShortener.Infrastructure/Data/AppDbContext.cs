@@ -1,3 +1,4 @@
+using EntityFramework.Exceptions.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using URLShortener.Domain.Entities;
@@ -17,5 +18,11 @@ namespace URLShortener.Infrastructure.Data
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseExceptionProcessor();
+        }
+
     }
 }

@@ -1,12 +1,62 @@
-﻿using Moq;
-using URLShortener.Application.Interfaces;
+﻿using EntityFramework.Exceptions.Common;
+using Moq;
 using test.Application.Services;
+using URLShortener.Application.Interfaces;
 
 namespace URLShortener.Application.UnitTests
 {
     [TestClass]
     public class ShortUrlServiceTests
     {
+
+        [TestMethod]
+        public async Task CreateAsync_UniqueConstraintViolation_RetriesAndSucceeds()
+        {
+            var repository = new Mock<IShortUrlRepository>(MockBehavior.Strict);
+            var request = new DTOs.ShortUrl.ShortUrlCreateRequest
+            {
+                OriginalUrl = "https://example.com/retry"
+            };
+
+            Domain.Entities.ShortUrl? addedEntity = null;
+            var generatedCodes = new List<string>();
+            var saveAttempt = 0;
+
+            repository
+                .Setup(repo => repo.AddAsync(It.IsAny<Domain.Entities.ShortUrl>()))
+                .Callback<Domain.Entities.ShortUrl>(entity => addedEntity = entity)
+                .Returns(Task.CompletedTask);
+
+            repository
+                .Setup(repo => repo.SaveChangesAsync())
+                .Returns(() =>
+                {
+                    saveAttempt++;
+                    generatedCodes.Add(addedEntity!.ShortCode);
+
+                    if (saveAttempt == 1)
+                    {
+                        return Task.FromException(new UniqueConstraintException());
+                    }
+
+                    return Task.CompletedTask;
+                });
+
+            var service = new ShortUrlService(repository.Object);
+
+            var result = await service.CreateAsync(request, 77);
+
+            Assert.IsTrue(result.Succeeded);
+            Assert.IsNotNull(result.Value);
+            Assert.AreEqual(request.OriginalUrl, result.Value.OriginalUrl);
+
+            Assert.HasCount(2, generatedCodes);
+            Assert.AreNotEqual(generatedCodes[0], generatedCodes[1]);
+            Assert.AreEqual($"/s/{generatedCodes[1]}", result.Value.ShortUrl);
+
+            repository.Verify(repo => repo.AddAsync(It.IsAny<Domain.Entities.ShortUrl>()), Times.Once);
+            repository.Verify(repo => repo.SaveChangesAsync(), Times.Exactly(2));
+        }
 
         [TestMethod]
         public async Task GetAllAsync_ItemsExist_MapsToResponseList()
