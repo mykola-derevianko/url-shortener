@@ -3,6 +3,7 @@ using URLShortener.Application.DTOs;
 using URLShortener.Application.DTOs.ShortUrl;
 using URLShortener.Application.Interfaces;
 using URLShortener.Domain.Entities;
+using URLShortener.Application.Common.Mappings;
 
 namespace test.Application.Services
 {
@@ -19,7 +20,10 @@ namespace test.Application.Services
         public async Task<Result<List<ShortUrlResponse>>> GetAllAsync()
         {
             var items = await _repository.GetAllAsync();
-            return Result<List<ShortUrlResponse>>.Success(items.Select(MapToResponse).ToList());
+
+            var responses = items.Select(item => item.ToResponse()).ToList();
+
+            return Result<List<ShortUrlResponse>>.Success(responses);
         }
 
         public async Task<Result<ShortUrlResponse>> GetByIdAsync(int id)
@@ -30,7 +34,7 @@ namespace test.Application.Services
                 return Result<ShortUrlResponse>.Failure("NotFound", "Short URL not found.");
             }
 
-            return Result<ShortUrlResponse>.Success(MapToResponse(item));
+            return Result<ShortUrlResponse>.Success(item.ToResponse());
         }
 
         public async Task<Result<ShortUrlResponse>> CreateAsync(ShortUrlCreateRequest request, int userId)
@@ -52,22 +56,18 @@ namespace test.Application.Services
                 try
                 {
                     await _repository.SaveChangesAsync();
-                    return Result<ShortUrlResponse>.Success(MapToResponse(shortUrl));
+                    return Result<ShortUrlResponse>.Success(shortUrl.ToResponse());
                 }
                 catch (UniqueConstraintException)
                 {
-                    if (attempt == MaxShortCodeAttempts)
-                    {
-                        return Result<ShortUrlResponse>.Failure(
-                            "Conflict",
-                            "Failed to generate a unique short code. Please try again.");
-                    }
+                    if (attempt == MaxShortCodeAttempts) break;
                 }
-            }
 
+            }
             return Result<ShortUrlResponse>.Failure(
                 "Conflict",
                 "Failed to generate a unique short code. Please try again.");
+
         }
 
         public async Task<Result> DeleteAsync(int id, int requestUserId, bool isAdmin)
@@ -92,18 +92,6 @@ namespace test.Application.Services
         private static string GenerateShortCode()
         {
             return Guid.NewGuid().ToString("N").Substring(0, 8);
-        }
-
-        private static ShortUrlResponse MapToResponse(ShortUrl item)
-        {
-            return new ShortUrlResponse
-            {
-                Id = item.Id,
-                OriginalUrl = item.OriginalUrl,
-                ShortUrl = $"/s/{item.ShortCode}",
-                CreatedByUserId = item.CreatedByUserId,
-                CreatedAt = item.CreatedAt
-            };
         }
     }
 }
