@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using test.Application.Services;
 using URLShortener.Application.Interfaces;
 using URLShortener.Application.Services;
 using URLShortener.Infrastructure.Data;
@@ -16,8 +17,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IShortUrlRepository, ShortUrlRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IShortUrlService, ShortUrlService>();
+
 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? 
     throw new ArgumentNullException("Jwt:Key is missing.");

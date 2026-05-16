@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using URLShortener.Web.Models;
 
-namespace test.Controllers
+namespace URLShortener.Controllers
 {
     public class HomeController : Controller
     {
