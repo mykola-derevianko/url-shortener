@@ -5,4 +5,5 @@
     <Project Path="src/URLShortener.Infrastructure/URLShortener.Infrastructure.csproj" />
     <Project Path="src/URLShortener.Web/URLShortener.Web.csproj" />
   </Folder>
+  <Project Path="tests/URLShortener.Application.UnitTests/URLShortener.Application.UnitTests.csproj" Id="1cd28f3f-21c3-49ae-a296-4d40c4394014" />
 </Solution>
