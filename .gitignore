@@ -83,11 +83,19 @@ TestResults/
 #####################
 node_modules/
 dist/
+.angular/cache/
 .angular/
+out-tsc/
 coverage/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+# Angular CLI / editor-generated files
+tmp/
+.cache/
+.eslintcache
 
 #####################
 # Archives          #
